@@ -70,6 +70,7 @@ def make_graph(count_to_plot, stat_to_plot, x_axis, plot_style = 0, m=None):
     return fig
 
 app = dash.Dash('Covid-Tracking')
+server = app.server
 
 app.layout = html.Div([
     html.Div([
@@ -150,4 +151,4 @@ def update_graph(countries, stats, x_axis, graph_style):
     return graphs
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server()
