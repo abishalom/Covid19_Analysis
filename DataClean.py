@@ -2,6 +2,7 @@ import plotly.express as px
 import numpy as np
 import pandas as pd
 import pickle
+from apscheduler.schedulers.background import BackgroundScheduler
 
 #Helper function
 def get_divide_cols_fn(c1, c2, res):
@@ -69,5 +70,11 @@ def data_clean(out_file):
 
     return 1
 
-if __name__ == "__main__":
+sched = BlockingScheduler()
+
+@sched.scheduled_job('cron', day_of_week='mon-sun',  hour = 23)
+def scheduled_job():
     data_clean('compiled_data.p')
+
+if __name__ == "__main__":
+    sched.start()

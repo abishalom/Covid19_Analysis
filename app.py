@@ -57,7 +57,6 @@ def make_graph(count_to_plot, stat_to_plot, x_axis, plot_style = 0, m=None):
                          title = '{} by Country'.format(stat_map.get(stat_to_plot, stat_to_plot)))
 #     fig.add_trace(tr)
 
-#     fig.update_xaxes(title = 'Days Since First Confirmed Test')
     fig.update_xaxes(title = xs_map.get(x_axis, x_axis))
     fig.update_yaxes(title = stat_to_plot)
 
