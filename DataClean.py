@@ -70,7 +70,7 @@ def data_clean(out_file):
 
     return 1
 
-sched = BlockingScheduler()
+sched = BackgroundScheduler()
 
 @sched.scheduled_job('cron', day_of_week='mon-sun',  hour = 23)
 def scheduled_job():
