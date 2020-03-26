@@ -21,6 +21,7 @@ def data_clean(out_file):
     dat.index = dat.index.rename("Date")
     dat.columns = dat.columns.rename(['Country', 'Col'])
     dat = dat.stack(level=0)
+    dat.index = dat.index.reorder_levels(['Country', 'Date'])
 
     #Clean Hopkins Data
     jhu_url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'
@@ -44,12 +45,11 @@ def data_clean(out_file):
     jhu_df = jhu_death_df.join(jhu_df)
     jhu_death_df = None
 
-    jhu_df.index = jhu_df.index.reorder_levels(["Date", "Country"])
-
     #Combine the datasets
     dat = pd.merge(dat, jhu_df, left_index=True, right_index=True, how = 'outer', suffixes = ('', '_JHU'))
     dat['Confirmed'] = dat['Confirmed'].combine_first(dat['Confirmed_JHU'])
     dat['Dead'] = dat['Dead'].combine_first(dat['Dead_JHU'])
+
 
     dat = dat.drop(['Confirmed_JHU', 'Dead_JHU'], axis=1)
 
@@ -63,6 +63,21 @@ def data_clean(out_file):
     dat = dat.groupby('Country').apply(get_divide_cols_fn("NewCases", "NewTests", "DailyPosTestRate"))
     dat = dat.groupby('Country').apply(get_divide_cols_fn("Confirmed", "TotalTests", "CumulativePosTestRate"))
 
+    #Days Since Shutdown
+    dat['DaysSinceShutdown'] = np.nan
+    x = (dat[dat['Shutdown'] == 1]).groupby('Country').shift(0)
+    s_countries = list(x.index.get_level_values(0))
+
+    for s in s_countries:
+        #Find d
+        old = x.xs(s, level=0)
+        d = (old.index[x['Shutdown'] == 1] - dat.index[0][1]).days[0]
+        new = dat.xs(s, level=0).Shutdown.shift(-d+2).fillna(1).cumsum() - (d-1)
+        dat.loc[s]['DaysSinceShutdown'] = new
+
+    dat = dat[dat['Confirmed'] >= 1]
+
+    #Set the index
     dat = dat.set_index([dat.index, "DaysSinceFirst"]).reorder_levels(["Country", "DaysSinceFirst", "Date"]).sort_index()
 
     #Pickle object, return success
@@ -78,3 +93,4 @@ def scheduled_job():
 
 if __name__ == "__main__":
     sched.start()
+    data_clean('compiled_data.p')

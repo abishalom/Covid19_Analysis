@@ -18,12 +18,14 @@ stat_map = {
     'CumulativePosTestRate': 'Cumulative Positive Test Rate',
     'NewCases': 'New Cases',
     'TotalTests': 'Total Tests',
-    'ConfirmedGrowth': 'Daily Confirmed Cases Growth (%)'
+    'ConfirmedGrowth': 'Daily Confirmed Cases Growth (%)',
+    'CumulativeDeadRate': 'Cumulative Death Rate'
 }
 
-xs = ['DaysSinceFirst', 'Date', 'DaysSinceTenthDeath']
+xs = ['DaysSinceFirst', 'Date', 'DaysSinceTenthDeath', 'DaysSinceShutdown']
 xs_map = {'DaysSinceFirst': 'Days Since First Confirmed',
-        'DaysSinceTenthDeath': 'Days Since 10th Death'}
+         'DaysSinceTenthDeath': 'Days Since 10th Death',
+         'DaysSinceShutdown': 'Days Since Economic Shutdown'}
 
 #Makes graphs
 def make_graph(count_to_plot, stat_to_plot, x_axis, plot_style = 0, m=None):
