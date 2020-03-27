@@ -6,8 +6,6 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 
-
-
 dat = pickle.load(open('compiled_data.p', 'rb'))
 countries = list(dat.index.get_level_values(0).unique())
 stats = list(dat.columns)
@@ -19,7 +17,9 @@ stat_map = {
     'NewCases': 'New Cases',
     'TotalTests': 'Total Tests',
     'ConfirmedGrowth': 'Daily Confirmed Cases Growth (%)',
-    'CumulativeDeadRate': 'Cumulative Death Rate'
+    'CumulativeDeathRate': 'Cumulative Death Rate',
+    'HospitalizationRate': 'Hospitalization Rate',
+    'TotalTestsPer10k': 'Total Tests per 10k Population'
 }
 
 xs = ['DaysSinceFirst', 'Date', 'DaysSinceTenthDeath', 'DaysSinceShutdown']
@@ -75,7 +75,9 @@ server = app.server
 
 app.layout = html.Div([
     html.Div([
-        html.H2('COVID-19 Tracking',)
+        html.H2('COVID-19 Tracking',),
+        html.H4('Please hit "Reset axis" button after changing x-axis on plots; button in top right corner of each plot, shaped like house.'),
+        html.H4('You can also pan, zoom, and hover over datapoints in the plots.')
     ]),
     html.Div([
         html.P(["Countries:",
@@ -122,7 +124,12 @@ app.layout = html.Div([
     ], style = {'width':'20%', 'display':'inline-block', 'text-align': 'center'}),
 
     html.Div(children = html.Div(id='graphs'), className = 'row', style = {"display":'inline-block', 'width': '100%'}),
-    ], className = 'container'
+
+    html.Div([
+        html.P(['Most data on confirms and deaths from Johns Hopkins. US data from covidtracking.com, Italy data from official repo. Other data independently gathered']),
+    ])
+#     dcc.Graph(id='graphs', style = {'width': '80%', 'display': 'inline-block'}),
+], className = 'container'
 )
 
 
