@@ -78,8 +78,9 @@ def data_clean(out_file):
     dat = dat[dat['Confirmed'] >= 1]
 
     #Set the index
-    dat = dat.set_index([dat.index, "DaysSinceFirst"]).reorder_levels(["Country", "DaysSinceFirst", "Date"]).sort_index()
-
+    dat = dat.set_index([dat.index, "DaysSinceFirst", "DaysSinceTenthDeath", "DaysSinceShutdown"
+                        ]).reorder_levels(["Country", "DaysSinceFirst", "DaysSinceTenthDeath", "DaysSinceShutdown",
+                                        "Date"]).sort_index()
     #Pickle object, return success
     pickle.dump(dat, open(out_file, 'wb'))
 
@@ -93,4 +94,4 @@ def scheduled_job():
 
 if __name__ == "__main__":
     sched.start()
-    data_clean('compiled_data.p')
+    # data_clean('compiled_data.p')
