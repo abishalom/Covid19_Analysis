@@ -126,6 +126,7 @@ app.layout = html.Div([
     html.Div(children = html.Div(id='graphs'), className = 'row', style = {"display":'inline-block', 'width': '100%'}),
 
     html.Div([
+        html.P(['Testing data available for: Panama, Ecuador, Peru, Costa Rica, Italy, US, South Korea. Limited data available for Colombia.']),
         html.P(['Most data on confirms and deaths from Johns Hopkins. US data from covidtracking.com, Italy data from official repo. Other data independently gathered']),
     ])
 #     dcc.Graph(id='graphs', style = {'width': '80%', 'display': 'inline-block'}),
