@@ -1,6 +1,9 @@
 import plotly.express as px
-import pandas as pd
 import numpy as np
+import pandas as pd
+import DataClean
+import datetime
+import os
 import pickle
 import dash
 import dash_core_components as dcc
@@ -76,6 +79,18 @@ server = app.server
 app.layout = html.Div([
     html.Div([
         html.H2('COVID-19 Tracking',),
+    ], style = {'width': '40%', 'display': 'inline-block'}),
+
+    html.Div([
+        html.P(id='refresh-time')
+    ], style = {'width': '40%', 'display': 'inline-block', 'align':'center'}),
+
+    html.Div([
+        html.Button('Refresh', id = 'refresh-button', n_clicks=0)
+    ], style = {'width': '20%', 'display': 'inline-block', 'align':'right'}),
+
+
+    html.Div([
         html.H4('Please hit "Reset axis" button after changing x-axis on plots; button in top right corner of each plot, shaped like house.'),
         html.H4('You can also pan, zoom, and hover over datapoints in the plots.')
     ]),
@@ -133,7 +148,6 @@ app.layout = html.Div([
 ], className = 'container'
 )
 
-
 @app.callback(
     dash.dependencies.Output('graphs', 'children'),
     [dash.dependencies.Input('country-select', 'value'), dash.dependencies.Input('statistic-select', 'value'),
@@ -158,6 +172,14 @@ def update_graph(countries, stats, x_axis, graph_style):
             ), className = class_choice
         ))
     return graphs
+
+@app.callback(dash.dependencies.Output('refresh-time', 'children'),
+             [dash.dependencies.Input('refresh-button', 'n_clicks')])
+def on_click(n_clicks):
+    if n_clicks >= 1:
+        DataClean.data_clean('compiled_data.p')
+    t = datetime.datetime.fromtimestamp(os.path.getmtime('compiled_data.p'))
+    return 'Last refresh: {}'.format(t.strftime('%Y-%b-%d, %H:%M:%S'))
 
 if __name__ == "__main__":
     app.run_server()
