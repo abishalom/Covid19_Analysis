@@ -179,7 +179,7 @@ def on_click(n_clicks):
     if n_clicks >= 1:
         DataClean.data_clean('compiled_data.p')
     t = datetime.datetime.fromtimestamp(os.path.getmtime('compiled_data.p'))
-    return 'Last refresh: {}'.format(t.strftime('%Y-%b-%d, %H:%M:%S'))
+    return 'Last refresh: {}'.format(t.strftime('%Y-%b-%d, %H:%M:%S  %Z'))
 
 if __name__ == "__main__":
     app.run_server()
