@@ -131,11 +131,13 @@ def data_clean(out_file):
     jhu_df = None
     dat = merge_pop(dat)
 
+    #Tens of thousands of population
     dat['Pop10k'] = dat['Population'] / 10000
 
     #Add New Cases, New Tests
     dat['NewCases'] = dat.groupby('Country')['Confirmed'].diff()
     dat['NewTests'] = dat.groupby('Country')['TotalTests'].diff()
+    dat['NewDeaths'] = dat.groupby('Country')['Deaths'].diff()
     dat['DaysSinceFirst'] = (dat['Confirmed'] >= 1).groupby('Country').cumsum().replace(0, np.nan) - 1
     dat['ConfirmedGrowth'] = dat.groupby('Country')['Confirmed'].pct_change() * 100.
     dat['DaysSinceTenthDeath'] = (dat['Deaths'] >= 10).groupby('Country').cumsum().replace(0, np.nan)
@@ -145,6 +147,8 @@ def data_clean(out_file):
     dat = dat.groupby('Country').apply(get_divide_cols_fn("Deaths", "Confirmed", "CumulativeDeathRate"))
     dat = dat.groupby('Country').apply(get_divide_cols_fn('Hospitalized', 'Confirmed', 'HospitalizationRate'))
     dat = dat.groupby('Country').apply(get_divide_cols_fn('TotalTests', 'Pop10k', 'TotalTestsPer10k'))
+    dat = dat.groupby('Country').apply(get_divide_cols_fn('Confirmed', 'Pop10k', 'ConfirmedPer10k'))
+    dat = dat.groupby('Country').apply(get_divide_cols_fn('NewTests', 'Pop10k', 'NewTestsPer10k'))
 
     #Days Since Shutdown
     dat['DaysSinceShutdown'] = np.nan

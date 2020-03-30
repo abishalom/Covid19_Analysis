@@ -22,7 +22,9 @@ stat_map = {
     'ConfirmedGrowth': 'Daily Confirmed Cases Growth (%)',
     'CumulativeDeathRate': 'Cumulative Death Rate',
     'HospitalizationRate': 'Hospitalization Rate',
-    'TotalTestsPer10k': 'Total Tests per 10k Population'
+    'TotalTestsPer10k': 'Total Tests per 10k Population',
+    'ConfirmedPer10k': 'Total Confirmed per 10k Population',
+    'NewTestsPer10k': 'Daily Tests per 10k Population'
 }
 
 xs = ['DaysSinceFirst', 'Date', 'DaysSinceTenthDeath', 'DaysSinceShutdown']
@@ -148,6 +150,7 @@ app.layout = html.Div([
 ], className = 'container'
 )
 
+
 @app.callback(
     dash.dependencies.Output('graphs', 'children'),
     [dash.dependencies.Input('country-select', 'value'), dash.dependencies.Input('statistic-select', 'value'),
@@ -176,10 +179,12 @@ def update_graph(countries, stats, x_axis, graph_style):
 @app.callback(dash.dependencies.Output('refresh-time', 'children'),
              [dash.dependencies.Input('refresh-button', 'n_clicks')])
 def on_click(n_clicks):
+    timezone = datetime.datetime.now().astimezone().strftime('%Z')
     if n_clicks >= 1:
         DataClean.data_clean('compiled_data.p')
+
     t = datetime.datetime.fromtimestamp(os.path.getmtime('compiled_data.p'))
-    return 'Last refresh: {}'.format(t.strftime('%Y-%b-%d, %H:%M:%S  %Z'))
+    return 'Last refresh: {} {}'.format(t.strftime('%Y-%b-%d, %H:%M:%S'), timezone)
 
 if __name__ == "__main__":
     app.run_server()
