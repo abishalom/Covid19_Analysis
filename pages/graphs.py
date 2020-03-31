@@ -8,6 +8,7 @@ import pickle
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
 
 from app import app
 
@@ -35,145 +36,172 @@ xs_map = {'DaysSinceFirst': 'Days Since First Confirmed',
          'DaysSinceShutdown': 'Days Since Economic Shutdown'}
 
 #Makes graphs
-def make_graph(count_to_plot, stat_to_plot, x_axis, plot_style = 0, m=None):
+def make_graph(count_to_plot, stat_to_plot, x_axis, m=None):
     to_add = ['Date'] if x_axis != 'Date' else []
     to_plot = dat.reset_index()
     to_plot = to_plot[to_plot.Country.isin(count_to_plot)][['Country'] + [stat_to_plot] + [x_axis] +to_add ]
     if x_axis != 'Date':
         to_plot['Date'] = to_plot['Date'].dt.strftime('%b %d, %Y')
 
-    if plot_style == 0:
-        fig = px.scatter(to_plot,
-                         x = to_plot[x_axis],
-                         y = to_plot[stat_to_plot],
-                         color = to_plot.Country,
-                         hover_data = ['Date'] if x_axis != 'Date' else [],
-                         title = '{} by Country'.format(stat_map.get(stat_to_plot, stat_to_plot)))
-    elif plot_style == 1:
-        fig = px.bar(to_plot,
-                         x = to_plot[x_axis],
-                         y = to_plot[stat_to_plot],
-                         color = to_plot.Country,
-                         barmode = 'group',
-                         hover_data = ['Date'] if x_axis != 'Date' else [],
-                         title = '{} by Country'.format(stat_map.get(stat_to_plot, stat_to_plot)))
-    elif plot_style == 2:
-        fig = px.line(to_plot,
-                         x = to_plot[x_axis],
-                         y = to_plot[stat_to_plot],
-                         color = to_plot.Country,
-                         hover_data = ['Date'] if x_axis != 'Date' else [],
-                         title = '{} by Country'.format(stat_map.get(stat_to_plot, stat_to_plot)))
-#     fig.add_trace(tr)
+    def add_styling(plot_fig):
+        plot_fig.update_xaxes(title = xs_map.get(x_axis, x_axis))
+        plot_fig.update_yaxes(title = stat_to_plot)
+        return plot_fig
 
-    fig.update_xaxes(title = xs_map.get(x_axis, x_axis))
-    fig.update_yaxes(title = stat_to_plot)
+    #generate a plot of each type, save in a dict.
+    plots = {}
 
-    if m is not None:
-        x_lim = to_plot.reset_index().groupby('Country')[x_axis].max().min() * m
-        y_lim = to_plot.reset_index().groupby('Country')[stat_to_plot].max().min() * m
-        fig.update_xaxes(range = [0, x_lim])
-        fig.update_yaxes(range = [0, y_lim])
+    plots['scatter'] = add_styling(
+        px.scatter(to_plot,
+            x = to_plot[x_axis],
+            y = to_plot[stat_to_plot],
+            color = to_plot.Country,
+            hover_data = ['Date'] if x_axis != 'Date' else [],
+            title = '{} by Country'.format(stat_map.get(stat_to_plot, stat_to_plot)))
+    )
 
-    return fig
+    plots['bar'] = add_styling(
+        px.bar(to_plot,
+            x = to_plot[x_axis],
+            y = to_plot[stat_to_plot],
+            color = to_plot.Country,
+            barmode = 'group',
+            hover_data = ['Date'] if x_axis != 'Date' else [],
+            title = '{} by Country'.format(stat_map.get(stat_to_plot, stat_to_plot)))
+    )
 
-layout = html.Div([
-    html.Div([
-        html.H2('COVID-19 Tracking',),
-    ], style = {'width': '40%', 'display': 'inline-block'}),
+    plots['line'] = add_styling(
+        px.line(to_plot,
+            x = to_plot[x_axis],
+            y = to_plot[stat_to_plot],
+            color = to_plot.Country,
+            hover_data = ['Date'] if x_axis != 'Date' else [],
+            title = '{} by Country'.format(stat_map.get(stat_to_plot, stat_to_plot)))
+    )
+    return plots
 
-    html.Div([
-        html.P(id='refresh-time')
-    ], style = {'width': '40%', 'display': 'inline-block', 'align':'center'}),
+layout = dbc.Container([
+    dcc.Store(id='graphs-store'),
 
-    html.Div([
-        html.Button('Refresh', id = 'refresh-button', n_clicks=0)
-    ], style = {'width': '20%', 'display': 'inline-block', 'align':'right'}),
-
+    dbc.Tabs([
+        dbc.Tab(label = 'Scatter', tab_id = 'scatter'),
+        dbc.Tab(label = 'Bar', tab_id='bar'),
+        dbc.Tab(label= 'Line', tab_id='line')
+    ], id = 'tabs'),
 
     html.Div([
-        html.H4('Please hit "Reset axis" button after changing x-axis on plots; button in top right corner of each plot, shaped like house.'),
-        html.H4('You can also pan, zoom, and hover over datapoints in the plots.')
+        dbc.Row([
+            dbc.Col(dbc.Button('Refresh', id = 'refresh-button', n_clicks=0,  block=True)),
+            dbc.Col(html.Div(id='refresh-time'), align='right')
+        ])
     ]),
+    # html.Div([
+    #     # html.Button('Refresh', id = 'refresh-button', n_clicks=0, style = {'height': '50px', 'width':'300px'})
+    #     dbc.Button('Refresh', id = 'refresh-button', n_clicks=0,  block=True)
+    # ], style = {'width': '50%', 'display': 'inline-block', 'align':'center'}),
+
+    # html.Div([
+    #     html.P(id='refresh-time')
+    # ], style = {'width': '50%', 'display': 'inline-block', 'align':'right'}),
+
+    # html.Div([
+    #     html.H4('Please hit "Reset axis" button after changing x-axis on plots; button in top right corner of each plot, shaped like house.'),
+    #     html.H4('You can also pan, zoom, and hover over datapoints in the plots.')
+    # ]),
+
     html.Div([
-        html.P(["Countries:",
-            dcc.Dropdown(
+        dbc.Row(
+            [
+            dbc.Col(html.Div("Countries:"), width=4),
+            dbc.Col(html.Div("Statistics:"), width=5),
+            dbc.Col(html.Div("X-Axis:"), width=3)
+            ],
+            justify="center",
+            align='center'
+        ),
+        dbc.Row(
+            [
+            dbc.Col(
+                [dcc.Dropdown(
                 id = 'country-select',
-    #             options = countries,
                 options = [{'label': stat_map.get(c, c), 'value': c} for c in countries],
                 value = ['Panama'],
                 multi = True
-            )
-        ]),
-    ], style = {"width": "30%", 'display': 'inline-block', 'text-align': 'center'} ),
-    html.Div([
-        html.P(["Statistics:",
-            dcc.Dropdown(
-                id = 'statistic-select',
-                options = [{'label': stat_map.get(s, s), 'value': s} for s in stats],
-                value = ['Confirmed'],
-                multi=True
-            )
-        ])
-    ], style = {'width':'30%', 'display':'inline-block', 'text-align': 'center'}),
-    html.Div([
-        html.P(["X-Axis:",
-            dcc.Dropdown(
-                id = 'x-axis-select',
-                options = [{'label': xs_map.get(x, x), 'value': x} for x in xs],
-                value = 'DaysSinceFirst',
-                multi=False
-            )
-        ])
-    ], style = {'width':'20%', 'display':'inline-block', 'text-align': 'center'}),
-    html.Div([
-        html.P(["Graph Style:",
-            dcc.Dropdown(
-                id = 'graph-style',
-                options = [{'label': 'Scatter', 'value': 0}, 
-                           {'label': 'Bar' , 'value': 1},
-                           {'label': 'Line', 'value': 2}],
-                value = 0,
-                multi=False
-            )
-        ])
-    ], style = {'width':'20%', 'display':'inline-block', 'text-align': 'center'}),
+                )],
+            width = 4),
+            dbc.Col(
+                [dcc.Dropdown(
+                    id = 'statistic-select',
+                    options = [{'label': stat_map.get(s, s), 'value': s} for s in stats],
+                    value = ['Confirmed'],
+                    multi=True
+                )],
+            width = 5),
+            dbc.Col(
+                [dcc.Dropdown(
+                    id = 'x-axis-select',
+                    options = [{'label': xs_map.get(x, x), 'value': x} for x in xs],
+                    value = 'DaysSinceFirst',
+                    multi=False
+                )],
+            width = 3),],
+        justify = 'center',
+        align='center')
+    ]),
 
-    html.Div(children = html.Div(id='graphs'), className = 'row', style = {"display":'inline-block', 'width': '100%'}),
+    html.Div(id='tab-content'),
 
     html.Div([
-        html.P(['Testing data available for: Panama, Ecuador, Peru, Costa Rica, Italy, US, South Korea. Limited data available for Colombia.']),
-        html.P(['Most data on confirms and deaths from Johns Hopkins. US data from covidtracking.com, Italy data from official repo. Other data independently gathered']),
-    ])
-#     dcc.Graph(id='graphs', style = {'width': '80%', 'display': 'inline-block'}),
-], className = 'container'
+        dbc.Row(dbc.Col([
+            html.P("Please hit 'reset axis' button after changing x-axis on plots; this button is top-right corner, shaped like a house."),
+            html.P("You can interact with plots by panning, zooming, and hovering over datapoints."),
+        ]))
+    ]),
+
+], className = 'dash-bootstrap', fluid=True
 )
+
+
+
+#Generate the graphs for ALL types
+@app.callback(
+    Output('graphs-store', 'data'),
+    [Input('country-select', 'value'), Input('statistic-select', 'value'),
+    Input('x-axis-select', 'value')]
+)
+def update_graph(countries, stats, x_axis):
+    #Returns a list of graphs
+    graph_types = ['scatter', 'bar', 'line']
+    all_graphs = {i: [] for  i in graph_types}
+
+    for plot_stat in stats:
+        gs = make_graph(countries, plot_stat, x_axis)
+        for i,g in gs.items():
+            all_graphs[i].append(dcc.Graph(figure=g,
+                                    id = '{}_{}'.format(plot_stat, i),
+                                    animate = True))
+    return all_graphs
 
 
 @app.callback(
-    Output('graphs', 'children'),
-    [Input('country-select', 'value'), Input('statistic-select', 'value'),
-    Input('x-axis-select', 'value'), Input('graph-style', 'value')]
+    Output('tab-content', 'children'),
+    [Input('tabs', 'active_tab'), Input('graphs-store', 'data')]
 )
-def update_graph(countries, stats, x_axis, graph_style):
-    if len(stats)>2:
-        class_choice = 'col s12 m6 l4'
-    elif len(stats) == 2:
-        class_choice = 'col s12 m6 l6'
-    else:
-        class_choice = 'col s12'
-    #Returns a list of graphs
-    graphs = []
-    for plot_stat in stats:
-        g = make_graph(countries, plot_stat, x_axis, plot_style=graph_style)
-        graphs.append(html.Div(dcc.Graph(
-            id = plot_stat,
-            animate = True,
-            figure = g
-            ), className = class_choice
-        ))
-    return graphs
+def render_tab_content(active_tab, data):
+    """
+    Takes active tab and stored graphs as input, renders tab content depending on value of active tab.
+    """
+    if active_tab and data is not None:
+            return [dbc.Row(dbc.Col(g)) for g in data[active_tab]]
+            # dbc.Col(
+            #     [dbc.Row(g) for g in data[active_tab]],
+            # )
+    # return dbc.Col(data[active_tab][0])
 
+    # return data
+
+
+#Get the last refreshed time and return it
 @app.callback(Output('refresh-time', 'children'),
              [Input('refresh-button', 'n_clicks')])
 def on_click(n_clicks):
