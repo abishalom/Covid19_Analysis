@@ -36,7 +36,7 @@ xs_map = {'DaysSinceFirst': 'Days Since First Confirmed',
          'DaysSinceShutdown': 'Days Since Economic Shutdown'}
 
 #Makes graphs
-def make_graph(count_to_plot, stat_to_plot, x_axis, m=None):
+def make_graph(count_to_plot, stat_to_plot, x_axis):
     to_add = ['Date'] if x_axis != 'Date' else []
     to_plot = dat.reset_index()
     to_plot = to_plot[to_plot.Country.isin(count_to_plot)][['Country'] + [stat_to_plot] + [x_axis] +to_add ]
