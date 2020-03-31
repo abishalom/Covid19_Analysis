@@ -2,7 +2,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
-from app import app, server
+from app import app
 from pages import about, graphs
 from navbar import navbar
 
@@ -11,6 +11,8 @@ app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     html.Div(id = 'page-content')
 ])
+
+server = app.server
 
 @app.callback(Output('page-content', 'children'),
              [Input('url', 'pathname')])
