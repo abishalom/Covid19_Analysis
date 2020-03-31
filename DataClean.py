@@ -2,7 +2,6 @@ import plotly.express as px
 import numpy as np
 import pandas as pd
 import pickle
-from apscheduler.schedulers.background import BackgroundScheduler
 
 #Helper function
 def get_divide_cols_fn(c1, c2, res):
@@ -156,10 +155,10 @@ def data_clean(out_file):
     s_countries = list(x.index.get_level_values(0))
 
     for s in s_countries:
-        #Find d
-        old = x.xs(s, level=0)
-        d = (old.index[x['Shutdown'] == 1] - dat.index[0][1]).days[0]
-        new = dat.xs(s, level=0).Shutdown.shift(-d+2).fillna(1).cumsum() - (d-1)
+        old = x.xs(s, level=0).index[0]
+        first = dat.xs(s, level=0).index[0]
+        d = len(dat.xs(s, level=0).loc[first:old].index)
+        new = dat.xs(s, level=0).Shutdown.shift(-d + 1).fillna(1).cumsum() - (d)
         dat.loc[s]['DaysSinceShutdown'] = new
 
     #Keep the ones with more than 1 confirmed day
@@ -174,11 +173,11 @@ def data_clean(out_file):
 
     return 1
 
-sched = BackgroundScheduler()
+# sched = BackgroundScheduler()
 
-@sched.scheduled_job('cron', day_of_week='mon-sun',  hour = 23)
-def scheduled_job():
-    data_clean('compiled_data.p')
+# @sched.scheduled_job('cron', day_of_week='mon-sun',  hour = 23)
+# def scheduled_job():
+#     data_clean('compiled_data.p')
 
 if __name__ == "__main__":
     # sched.start()
