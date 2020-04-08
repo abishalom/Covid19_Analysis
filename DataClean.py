@@ -181,4 +181,4 @@ def data_clean(out_file):
 
 if __name__ == "__main__":
     # sched.start()
-    return data_clean('compiled_data.p')
+    data_clean('compiled_data.p')

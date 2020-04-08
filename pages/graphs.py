@@ -207,7 +207,9 @@ def render_tab_content(active_tab, data):
 def on_click(n_clicks):
     timezone = datetime.datetime.now().astimezone().strftime('%Z')
     if n_clicks >= 1:
-        dat = DataClean.data_clean('compiled_data.p')
+        DataClean.data_clean('compiled_data.p')
+
+    dat = pickle.load(open('compiled_data.p', 'rb'))
 
     t = datetime.datetime.fromtimestamp(os.path.getmtime('compiled_data.p'))
     return 'Last refresh: {} {}'.format(t.strftime('%Y-%b-%d, %H:%M:%S'), timezone)
