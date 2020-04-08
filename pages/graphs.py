@@ -207,7 +207,7 @@ def render_tab_content(active_tab, data):
 def on_click(n_clicks):
     timezone = datetime.datetime.now().astimezone().strftime('%Z')
     if n_clicks >= 1:
-        DataClean.data_clean('compiled_data.p')
+        dat = DataClean.data_clean('compiled_data.p')
 
     t = datetime.datetime.fromtimestamp(os.path.getmtime('compiled_data.p'))
     return 'Last refresh: {} {}'.format(t.strftime('%Y-%b-%d, %H:%M:%S'), timezone)

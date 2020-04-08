@@ -20,7 +20,7 @@ layout = dbc.Container([
     )),
     dbc.Row(dbc.Col(html.H3('Data Sources'))),
     dbc.Row(dbc.Col(html.P(
-        """I individually collect data from Panama, Peru, Ecuador, Costa Rica, Colombia, and South Korea.
+        """I individually collect data from Panama, Peru, Ecuador, Costa Rica, Colombia, Chile, Mexico, and South Korea.
         US testing data from covidtracking.com, Italy testing data from the official government Github repository.
         The rest of the data (confirmed cases and deaths) is retrieved from Johns Hopkins github repository.
         """

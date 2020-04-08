@@ -171,7 +171,7 @@ def data_clean(out_file):
     #Pickle object, return success
     pickle.dump(dat, open(out_file, 'wb'))
 
-    return 1
+    return dat
 
 # sched = BackgroundScheduler()
 
@@ -181,4 +181,4 @@ def data_clean(out_file):
 
 if __name__ == "__main__":
     # sched.start()
-    data_clean('compiled_data.p')
+    return data_clean('compiled_data.p')
