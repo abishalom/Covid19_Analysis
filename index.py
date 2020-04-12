@@ -3,7 +3,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from app import app
-from pages import about, graphs
+from pages import about, graphs, analysis
 from navbar import navbar
 
 app.layout = html.Div([
@@ -21,6 +21,8 @@ def display_page(pathname):
         return about.layout
     elif pathname == '/graphs' or pathname == '/':
         return graphs.layout
+    elif pathname == '/analysis':
+        return analysis.layout
     else:
         return '404'
 
