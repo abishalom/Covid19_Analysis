@@ -77,9 +77,10 @@ def get_probs(TPR, TNR, asymp_pct, country, num_tests):
         prob_anti_pos_test =  (TPR**num_tests * AP)/(TPR**num_tests * AP + FPR**num_tests * (1-AP))
         prob_noanti_neg_test = (TNR**num_tests * (1-AP))/(TNR**num_tests * (1-AP) + FNR**num_tests * AP)
 
+        s0 = 'Assumptions imply {:.0f} total cases of Covid-19. This represents {:.4f}% of the population.'.format(tot_cases, AP * 100)
         s1 = 'Probablity of having antibodies after testing positive {} time(s): {:.6f}'.format(num_tests, prob_anti_pos_test)
         s2 = 'Probability of NOT having antibodies after testing negative {} time(s): {:.6f}'.format(num_tests, prob_noanti_neg_test)
 
-        return html.P([s1, html.Br(), s2])
+        return html.P([s0, html.Br(), s1, html.Br(), s2])
     except TypeError:
         return html.P([''])
