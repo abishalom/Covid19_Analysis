@@ -124,7 +124,7 @@ layout = dbc.Container([
             dbc.Col(
                 [dcc.Dropdown(
                 id = 'country-select',
-                options = [{'label': stat_map.get(c, c), 'value': c} for c in countries],
+                options = [{'label': c, 'value': c} for c in countries],
                 value = ['Panama'],
                 multi = True
                 )],
