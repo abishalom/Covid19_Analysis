@@ -122,6 +122,9 @@ def data_clean(out_file):
     jhu_death_df = get_JHU_data('deaths')
     jhu_df = jhu_death_df.join(jhu_df)
     jhu_death_df = None
+    jhu_recovered_df = get_JHU_data('recovered')
+    jhu_df = jhu_df.join(jhu_recovered_df)
+    jhu_recovered_df = None
 
     #Join the dataframes, add US and Italy data from source.
     dat = join_dfs(dat, get_us_data())
@@ -140,6 +143,7 @@ def data_clean(out_file):
     dat['DaysSinceFirst'] = (dat['Confirmed'] >= 1).groupby('Country').cumsum().replace(0, np.nan) - 1
     dat['ConfirmedGrowth'] = dat.groupby('Country')['Confirmed'].pct_change() * 100.
     dat['DaysSinceTenthDeath'] = (dat['Deaths'] >= 10).groupby('Country').cumsum().replace(0, np.nan)
+    dat['ActiveCases'] = dat['Confirmed'] - dat['Recovered']
 
     dat = dat.groupby('Country').apply(get_divide_cols_fn("NewCases", "NewTests", "DailyPosTestRate"))
     dat = dat.groupby('Country').apply(get_divide_cols_fn("Confirmed", "TotalTests", "CumulativePosTestRate"))

@@ -17,7 +17,7 @@ countries = list(dat.index.get_level_values(0).unique())
 stats = list(dat.columns)
 stat_map = {
     'DailyPosTestRate': 'Daily Positive Test Rate',
-    'Confirmed': 'Confirmed Tests',
+    'Confirmed': 'Confirmed Cases',
     'NewTests': 'Daily New Tests',
     'CumulativePosTestRate': 'Cumulative Positive Test Rate',
     'NewCases': 'New Cases',
@@ -27,7 +27,8 @@ stat_map = {
     'HospitalizationRate': 'Hospitalization Rate',
     'TotalTestsPer10k': 'Total Tests per 10k Population',
     'ConfirmedPer10k': 'Total Confirmed per 10k Population',
-    'NewTestsPer10k': 'Daily Tests per 10k Population'
+    'NewTestsPer10k': 'Daily Tests per 10k Population',
+    'ActiveCases': 'Active Cases'
 }
 
 xs = ['DaysSinceFirst', 'Date', 'DaysSinceTenthDeath', 'DaysSinceShutdown']
