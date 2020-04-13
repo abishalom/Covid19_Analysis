@@ -50,6 +50,7 @@ layout = dbc.Container([
     dbc.Row(dbc.Col(html.P("""A tool for using Bayes Rule to ballpark the usefulness of antibody test results.
     Insert the estimated sensitivity and specificity of the test, along with an estimate for the percentage of coronavirus cases that are asymptomatic.
     We assume that all confirmed patients are not included under the asymptomatic population. We also assume each new test done is independent of the previous one.
+    Finally, we assume that only patients that have been previously infected are able to develop the antibodies needed.
     """))),
     dbc.Row([
         dbc.Col(controls, md=4),
