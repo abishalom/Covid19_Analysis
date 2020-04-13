@@ -205,6 +205,7 @@ def render_tab_content(active_tab, data):
 @app.callback(Output('refresh-time', 'children'),
              [Input('refresh-button', 'n_clicks')])
 def on_click(n_clicks):
+    global dat
     timezone = datetime.datetime.now().astimezone().strftime('%Z')
     if n_clicks >= 1:
         DataClean.data_clean('compiled_data.p')
