@@ -72,7 +72,7 @@ def join_dfs(default, other):
     return default
 
 def get_pop_dict():
-    pop = pd.read_csv('WPP2019_TotalPopulationBySex.csv')
+    pop = pd.read_csv('data/WPP2019_TotalPopulationBySex.csv')
     pop = pop[pop.Time.eq(2020) & pop.Variant.eq('Medium')][['Location', 'PopTotal']].set_index('Location')
     pop.columns = ['Population']
     pop.loc['Diamond Princess'] = 3700
@@ -107,7 +107,7 @@ def merge_pop(df):
 
 def data_clean(out_file):
     #Load initial Data
-    dat = pd.read_csv('Covid19_Data.csv', index_col = 0)
+    dat = pd.read_csv('data/Covid19_Data.csv', index_col = 0)
     dat.index = pd.to_datetime(dat.index)
 
     col = dat.columns.str.split('_', expand=True)
@@ -185,4 +185,4 @@ def data_clean(out_file):
 
 if __name__ == "__main__":
     # sched.start()
-    data_clean('compiled_data.p')
+    data_clean('data/compiled_data.p')

@@ -10,7 +10,7 @@ from app import app
 # layout = html.Div([
 #     html.H3('About page')
 # ])
-dat = pickle.load(open('compiled_data.p', 'rb'))
+dat = pickle.load(open('data/compiled_data.p', 'rb'))
 countries = list(dat.index.get_level_values(0).unique())
 
 

@@ -12,7 +12,7 @@ import dash_bootstrap_components as dbc
 
 from app import app
 
-dat = pickle.load(open('compiled_data.p', 'rb'))
+dat = pickle.load(open('data/compiled_data.p', 'rb'))
 countries = list(dat.index.get_level_values(0).unique())
 stats = list(dat.columns)
 stat_map = {
@@ -209,9 +209,9 @@ def on_click(n_clicks):
     global dat
     timezone = datetime.datetime.now().astimezone().strftime('%Z')
     if n_clicks >= 1:
-        DataClean.data_clean('compiled_data.p')
+        DataClean.data_clean('data/compiled_data.p')
 
-    dat = pickle.load(open('compiled_data.p', 'rb'))
+    dat = pickle.load(open('data/compiled_data.p', 'rb'))
 
-    t = datetime.datetime.fromtimestamp(os.path.getmtime('compiled_data.p'))
+    t = datetime.datetime.fromtimestamp(os.path.getmtime('data/compiled_data.p'))
     return 'Last refresh: {} {}'.format(t.strftime('%Y-%b-%d, %H:%M:%S'), timezone)
