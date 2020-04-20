@@ -17,7 +17,7 @@ def clean_data(results):
     #Cleans the data loaded from the Colombia API
 
     #Filter out babies that have ages in months
-    results = results[~results.edad.str.contains('mes')]
+    results = results[~results.edad.str.contains('mes', na= True)]
 
     new_map = {
         'fecha_de_diagn_stico': 'fecha_de_diagnostico',
