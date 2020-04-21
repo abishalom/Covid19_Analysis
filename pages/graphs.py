@@ -96,19 +96,6 @@ layout = dbc.Container([
             dbc.Col(html.Div(id='refresh-time'), align='right')
         ])
     ]),
-    # html.Div([
-    #     # html.Button('Refresh', id = 'refresh-button', n_clicks=0, style = {'height': '50px', 'width':'300px'})
-    #     dbc.Button('Refresh', id = 'refresh-button', n_clicks=0,  block=True)
-    # ], style = {'width': '50%', 'display': 'inline-block', 'align':'center'}),
-
-    # html.Div([
-    #     html.P(id='refresh-time')
-    # ], style = {'width': '50%', 'display': 'inline-block', 'align':'right'}),
-
-    # html.Div([
-    #     html.H4('Please hit "Reset axis" button after changing x-axis on plots; button in top right corner of each plot, shaped like house.'),
-    #     html.H4('You can also pan, zoom, and hover over datapoints in the plots.')
-    # ]),
 
     html.Div([
         dbc.Row(
@@ -175,12 +162,13 @@ def update_graph(countries, stats, x_axis):
     graph_types = ['scatter', 'bar', 'line']
     all_graphs = {i: [] for  i in graph_types}
 
-    for plot_stat in stats:
-        gs = make_graph(countries, plot_stat, x_axis)
-        for i,g in gs.items():
-            all_graphs[i].append(dcc.Graph(figure=g,
-                                    id = '{}_{}'.format(plot_stat, i),
-                                    animate = True))
+    if countries is not None and stats is not None and x_axis is not None:
+        for plot_stat in stats:
+            gs = make_graph(countries, plot_stat, x_axis)
+            for i,g in gs.items():
+                all_graphs[i].append(dcc.Graph(figure=g,
+                                        id = '{}_{}'.format(plot_stat, i),
+                                        animate = True))
     return all_graphs
 
 
