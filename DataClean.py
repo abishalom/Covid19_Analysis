@@ -2,6 +2,10 @@ import plotly.express as px
 import numpy as np
 import pandas as pd
 import pickle
+import datetime
+import zipfile
+import requests
+import io
 
 #Helper function
 def get_divide_cols_fn(c1, c2, res):
@@ -35,7 +39,7 @@ def get_us_data():
         'death': 'Deaths'
     }
 
-    us_df = us_df[list(col_map.keys())].rename(mapper=  col_map, axis=1)    
+    us_df = us_df[list(col_map.keys())].rename(mapper=  col_map, axis=1)
     us_df['Country'] = 'US'
     us_df = us_df.set_index([us_df.Country, us_df.index]).drop(['Country'], axis=1)
 
@@ -59,6 +63,55 @@ def get_italy_data():
     italy_df = italy_df.set_index([italy_df.Country, italy_df.index]).drop(['Country'], axis=1)
 
     return italy_df
+
+def clean_mx_data(df, date):
+    """
+    Should return a row of a df, indexed by Date, Country (Mexico) with columns Confirmed,
+    Totaltests (confirmed + negative), Deaths. Hospitalization would also be nice.
+    """
+    result_df = {}
+
+    result_df['Date'] = date
+    result_df['Country'] = 'Mexico'
+    result_df['Confirmed'] = (df['RESULTADO'] == 1).sum()
+    result_df['TotalTests'] = (df['RESULTADO'] == 2).sum() + result_df['Confirmed']
+    result_df['Deaths'] = df.query('RESULTADO == 1 & FECHA_DEF != "9999-99-99"').FECHA_DEF.count()
+
+    result_df = pd.DataFrame(result_df, index = [0])
+
+    return result_df
+
+def get_mexico_data(days_backwards = 7, verbose = False):
+    end = datetime.date.today()
+    start = datetime.date.today() - datetime.timedelta(days = days_backwards)
+    dates_to_see = pd.date_range(start, end)
+
+    res = pd.DataFrame()
+
+    for d in dates_to_see:
+        if verbose: print('Mexico pulling for {}'.format(d.strftime('%d-%m-%Y')))
+        url = "http://187.191.75.115/gobmx/salud/datos_abiertos/historicos/datos_abiertos_covid19_{}.zip".format(
+        d.strftime('%d.%m.%Y'))
+        r = requests.get(url, stream = True)
+
+        #fof represents 404 error on first try. Means we've reached last day of data.
+        fof = r.status_code == 404
+        if fof:
+            #If it's not under historical, grab most recent
+            r = requests.get("http://187.191.75.115/gobmx/salud/datos_abiertos/datos_abiertos_covid19.zip")
+
+        f = zipfile.ZipFile(io.BytesIO(r.content))
+        with f.open(f.namelist()[0]) as thefile:
+            df = pd.read_csv(thefile)
+
+        #Takes care of case when we had to go to recent df and it's yesterday's data.
+        if fof and df.FECHA_ACTUALIZACION.iloc[0] != d:
+            continue
+
+        c = clean_mx_data(df, d)
+        res = res.append(c)
+
+    return res.set_index(['Country', 'Date']).astype('int64')
 
 def join_dfs(default, other):
     #For joining dataframes, using one as default and filling in missing data
@@ -129,6 +182,7 @@ def data_clean(out_file):
     #Join the dataframes, add US and Italy data from source.
     dat = join_dfs(dat, get_us_data())
     dat = join_dfs(dat, get_italy_data())
+    dat = join_dfs(dat, get_mexico_data())
     dat = join_dfs(dat, jhu_df)
     jhu_df = None
     dat = merge_pop(dat)
