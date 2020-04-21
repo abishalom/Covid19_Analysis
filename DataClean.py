@@ -81,7 +81,7 @@ def clean_mx_data(df, date):
 
     return result_df
 
-def get_mexico_data(days_backwards = 7, verbose = False):
+def get_mexico_data(days_backwards = 3, verbose = False):
     end = datetime.date.today()
     start = datetime.date.today() - datetime.timedelta(days = days_backwards)
     dates_to_see = pd.date_range(start, end)
@@ -111,7 +111,52 @@ def get_mexico_data(days_backwards = 7, verbose = False):
         c = clean_mx_data(df, d)
         res = res.append(c)
 
-    return res.set_index(['Country', 'Date']).astype('int64')
+    return res.set_index(['Country', 'Date']).astype('float64')
+
+
+def clean_chile_data(df, df_name):
+    if df_name == 'TotalesNacionales':
+        rename_map = {
+            'Casos totales': 'Confirmed',
+            'Casos recuperados': 'Recovered',
+            'Fallecidos': 'Deaths'
+        }
+        df = df.T
+        df.columns = df.iloc[0].str.rstrip()
+        df = df[1:].rename(columns = rename_map)[list(rename_map.values())]
+    elif df_name == 'PCREstablecimiento':
+        df = df.query('Examenes == "realizados"').T
+        df = df[2:].astype('int64').sum(axis=1).rename('TotalTests').to_frame()
+    elif df_name == 'UCI':
+        df = df.T.drop(['Region', 'Codigo region', 'Poblacion']).sum(axis=1).rename('ICU').to_frame()
+    elif df_name == 'HospitalizadosEtario':
+        df.T.drop(['Grupo de edad', 'Sexo']).astype('int64').sum(axis=1).rename('Hospitalized').to_frame()
+
+    return df
+
+def get_chile_data(verbose = False):
+    prod_filename_map = {
+        5: 'TotalesNacionales',
+        8: 'UCI',
+        17: 'PCREstablecimiento',
+    }
+    general_URL_form = 'https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto{}/{}.csv'
+
+    master_df = pd.DataFrame()
+
+    for num, name in prod_filename_map.items():
+        url = general_URL_form.format(num, name)
+        if verbose: print(url)
+        df = pd.read_csv(url)
+
+        df = clean_chile_data(df, name)
+
+        master_df = master_df.join(df, how = 'outer')
+
+    master_df['Country'] = ['Chile'] * len(master_df.index)
+    master_df.index = master_df.index.rename('Date')
+
+    return master_df.reset_index().set_index(['Country', 'Date']).astype('float64').replace(0, np.NaN)
 
 def join_dfs(default, other):
     #For joining dataframes, using one as default and filling in missing data
@@ -182,7 +227,10 @@ def data_clean(out_file):
     #Join the dataframes, add US and Italy data from source.
     dat = join_dfs(dat, get_us_data())
     dat = join_dfs(dat, get_italy_data())
-    dat = join_dfs(dat, get_mexico_data())
+    #Mexico part is really slow, probably need to fix at some point. Can adjust to only
+    #pull like 2 days by default (instead of a whole week) and hopefully should alleviate.
+    dat = join_dfs(dat, get_mexico_data(verbose = False))
+    dat = join_dfs(dat, get_chile_data(verbose = False))
     dat = join_dfs(dat, jhu_df)
     jhu_df = None
     dat = merge_pop(dat)
