@@ -15,7 +15,8 @@ def get_divide_cols_fn(c1, c2, res):
         return df
     return f
 
-def get_JHU_data(name):
+def get_JHU_data(name, verbose = False):
+    if verbose: print("Retrieving JHU {}".format(name))
     jhu_url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_{}_global.csv'.format(name)
     jhu_df = pd.read_csv(jhu_url, error_bad_lines = False)
 
@@ -27,7 +28,8 @@ def get_JHU_data(name):
 
     return jhu_df
 
-def get_us_data():
+def get_us_data(verbose = False):
+    if verbose: print("Retrieving US data")
     url = 'https://covidtracking.com/api/us/daily.csv'
     us_df = pd.read_csv(url, index_col = 0)
     us_df.index = pd.to_datetime(us_df.index, format = '%Y%m%d').rename('Date')
@@ -46,7 +48,8 @@ def get_us_data():
 
     return us_df
 
-def get_italy_data():
+def get_italy_data(verbose = False):
+    if verbose: print("Retrieving Italy data")
     url = 'https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv'
     italy_df = pd.read_csv(url, index_col = 0)
     italy_df.index = pd.to_datetime(italy_df.index).normalize().rename('Date')
@@ -65,55 +68,79 @@ def get_italy_data():
 
     return italy_df
 
-def clean_mx_data(df, date):
-    """
-    Should return a row of a df, indexed by Date, Country (Mexico) with columns Confirmed,
-    Totaltests (confirmed + negative), Deaths. Hospitalization would also be nice.
-    """
-    result_df = {}
+################################
+# Below function too slow
+################################
+# def clean_mx_data(df, date):
+#     """
+#     Should return a row of a df, indexed by Date, Country (Mexico) with columns Confirmed,
+#     Totaltests (confirmed + negative), Deaths. Hospitalization would also be nice.
+#     """
+#     result_df = {}
 
-    result_df['Date'] = date
-    result_df['Country'] = 'Mexico'
-    result_df['Confirmed'] = (df['RESULTADO'] == 1).sum()
-    result_df['TotalTests'] = (df['RESULTADO'] == 2).sum() + result_df['Confirmed']
-    result_df['Deaths'] = df.query('RESULTADO == 1 & FECHA_DEF != "9999-99-99"').FECHA_DEF.count()
+#     result_df['Date'] = date
+#     result_df['Country'] = 'Mexico'
+#     result_df['Confirmed'] = (df['RESULTADO'] == 1).sum()
+#     result_df['TotalTests'] = (df['RESULTADO'] == 2).sum() + result_df['Confirmed']
+#     result_df['Deaths'] = df.query('RESULTADO == 1 & FECHA_DEF != "9999-99-99"').FECHA_DEF.count()
 
-    result_df = pd.DataFrame(result_df, index = [0])
+#     result_df = pd.DataFrame(result_df, index = [0])
 
-    return result_df
+#     return result_df
 
-def get_mexico_data(days_backwards = 3, verbose = False):
-    end = datetime.date.today()
-    start = datetime.date.today() - datetime.timedelta(days = days_backwards)
-    dates_to_see = pd.date_range(start, end)
+# def get_mexico_data(days_backwards = 3, verbose = False):
+    # end = datetime.date.today()
+    # start = datetime.date.today() - datetime.timedelta(days = days_backwards)
+    # dates_to_see = pd.date_range(start, end)
 
-    res = pd.DataFrame()
+    # res = pd.DataFrame()
 
-    for d in dates_to_see:
-        if verbose: print('Mexico pulling for {}'.format(d.strftime('%d-%m-%Y')))
-        url = "http://187.191.75.115/gobmx/salud/datos_abiertos/historicos/datos_abiertos_covid19_{}.zip".format(
-        d.strftime('%d.%m.%Y'))
-        r = requests.get(url, stream = True)
+    # for d in dates_to_see:
+    #     if verbose: print('Mexico pulling for {}'.format(d.strftime('%d-%m-%Y')))
+    #     url = "http://187.191.75.115/gobmx/salud/datos_abiertos/historicos/datos_abiertos_covid19_{}.zip".format(
+    #     d.strftime('%d.%m.%Y'))
+    #     r = requests.get(url, stream = True)
 
-        #fof represents 404 error on first try. Means we've reached last day of data.
-        fof = r.status_code == 404
-        if fof:
-            #If it's not under historical, grab most recent
-            r = requests.get("http://187.191.75.115/gobmx/salud/datos_abiertos/datos_abiertos_covid19.zip")
+    #     #fof represents 404 error on first try. Means we've reached last day of data.
+    #     fof = r.status_code == 404
+    #     if fof:
+    #         #If it's not under historical, grab most recent
+    #         r = requests.get("http://187.191.75.115/gobmx/salud/datos_abiertos/datos_abiertos_covid19.zip")
 
-        f = zipfile.ZipFile(io.BytesIO(r.content))
-        with f.open(f.namelist()[0]) as thefile:
-            df = pd.read_csv(thefile)
+    #     f = zipfile.ZipFile(io.BytesIO(r.content))
+    #     with f.open(f.namelist()[0]) as thefile:
+    #         df = pd.read_csv(thefile)
 
-        #Takes care of case when we had to go to recent df and it's yesterday's data.
-        if fof and df.FECHA_ACTUALIZACION.iloc[0] != d:
-            continue
+    #     #Takes care of case when we had to go to recent df and it's yesterday's data.
+    #     if fof and df.FECHA_ACTUALIZACION.iloc[0] != d:
+    #         continue
 
-        c = clean_mx_data(df, d)
-        res = res.append(c)
+    #     c = clean_mx_data(df, d)
+    #     res = res.append(c)
 
-    return res.set_index(['Country', 'Date']).astype('float64')
+    # return res.set_index(['Country', 'Date']).astype('float64')
 
+def get_mexico_data(verbose = False):
+    base_url = "https://raw.githubusercontent.com/mariorz/covid19-mx-time-series/master/data/covid19_{}_mx.csv"
+    types = [('confirmed', 'Confirmed'),
+             ('deaths', 'Deaths'),
+             ('negatives', 'Negatives')]
+    base_df = pd.DataFrame()
+
+    for url_name, my_name in types:
+        if verbose: print('Retrieving Mexico {}'.format(url_name))
+        df = pd.read_csv(base_url.format(url_name))
+        df = df.drop(columns = ['Estado']).sum(axis=0).rename_axis('Date').rename(my_name).to_frame()
+        base_df = base_df.join(df, how = 'outer')
+
+    base_df['TotalTests'] = base_df['Confirmed'] + base_df['Negatives']
+    base_df['Country'] = ['Mexico'] * len(base_df.index)
+
+    base_df = base_df.drop(columns = 'Negatives')
+
+    base_df = base_df.replace(0, np.nan).reset_index().set_index(['Country', 'Date'])
+
+    return base_df
 
 def clean_chile_data(df, df_name):
     if df_name == 'TotalesNacionales':
@@ -147,7 +174,7 @@ def get_chile_data(verbose = False):
 
     for num, name in prod_filename_map.items():
         url = general_URL_form.format(num, name)
-        if verbose: print(url)
+        if verbose: print("Retrieving Chile {}".format(name))
         df = pd.read_csv(url)
 
         df = clean_chile_data(df, name)
@@ -199,7 +226,8 @@ def get_pop_dict():
     pop = pop.rename(mapper = aliases, axis=0) * 1000
     return pop
 
-def merge_pop(df):
+def merge_pop(df, verbose = False):
+    if verbose: print("Retrieving population data.")
     pop = get_pop_dict()
     df = df.merge(pop, how = 'left', left_on = 'Country', right_index = True)
     return df
@@ -216,33 +244,32 @@ def data_clean(out_file, hard_refresh = False, verbose = False):
     dat = dat.stack(level=0)
     dat.index = dat.index.reorder_levels(['Country', 'Date'])
 
-
-    #Get Hopkins data
-    jhu_df = get_JHU_data('confirmed')
-    jhu_death_df = get_JHU_data('deaths')
-    jhu_df = jhu_death_df.join(jhu_df)
-    jhu_death_df = None
-    jhu_recovered_df = get_JHU_data('recovered')
-    jhu_df = jhu_df.join(jhu_recovered_df)
-    jhu_recovered_df = None
-
-    #Join the dataframes, add US and Italy data from source.
-    dat = join_dfs(dat, get_us_data())
-    dat = join_dfs(dat, get_italy_data())
-    #Mexico part is really slow, probably need to fix at some point. Can adjust to only
-    #pull like 2 days by default (instead of a whole week) and hopefully should alleviate.
+    #Join the dataframes, add US, Italy, Mexico data from source.
+    dat = join_dfs(dat, get_us_data(verbose = verbose))
+    dat = join_dfs(dat, get_italy_data(verbose = verbose))
     dat = join_dfs(dat, get_mexico_data(verbose = verbose))
     dat = join_dfs(dat, get_chile_data(verbose = verbose))
-    dat = join_dfs(dat, jhu_df)
-    jhu_df = None
-    dat = merge_pop(dat)
 
-    if not hard_refresh:
-        if verbose: print("Joining previously compiled data")
-        old = pickle.load(open('data/compiled_data.p', 'rb')).reset_index()
-        old.Date = pd.to_datetime(old.Date)
-        old = old.set_index(['Country', 'Date'])
-        dat = join_dfs(old, dat)
+    #Get Hopkins data
+    jhu_df = get_JHU_data('confirmed', verbose = verbose)
+    jhu_death_df = get_JHU_data('deaths', verbose = verbose)
+    jhu_df = jhu_death_df.join(jhu_df)
+    jhu_death_df = None
+    jhu_recovered_df = get_JHU_data('recovered', verbose = verbose)
+    jhu_df = jhu_df.join(jhu_recovered_df)
+    jhu_recovered_df = None
+    dat = join_dfs(dat, jhu_df)
+
+
+    jhu_df = None
+    dat = merge_pop(dat, verbose = verbose)
+
+    # if not hard_refresh:
+    #     if verbose: print("Joining previously compiled data")
+    #     old = pickle.load(open('data/compiled_data.p', 'rb')).reset_index()
+    #     old.Date = pd.to_datetime(old.Date)
+    #     old = old.set_index(['Country', 'Date'])
+    #     dat = join_dfs(old, dat)
 
     #Tens of thousands of population
     dat['Pop10k'] = dat['Population'] / 10000
@@ -274,7 +301,7 @@ def data_clean(out_file, hard_refresh = False, verbose = False):
         first = dat.xs(s, level=0).index[0]
         d = len(dat.xs(s, level=0).loc[first:old].index)
         new = dat.xs(s, level=0).Shutdown.shift(-d + 1).fillna(1).cumsum() - (d)
-        dat.loc[s]['DaysSinceShutdown'] = new
+        dat.loc[s, 'DaysSinceShutdown'] = new
 
     #Keep the ones with more than 1 confirmed day
     dat = dat[dat['Confirmed'] >= 1]
@@ -296,4 +323,4 @@ def data_clean(out_file, hard_refresh = False, verbose = False):
 
 if __name__ == "__main__":
     # sched.start()
-    data_clean('data/compiled_data.p', verbose=True)
+    data_clean('data/compiled_data.p', hard_refresh = True, verbose=True)
