@@ -186,6 +186,36 @@ def get_chile_data(verbose = False):
 
     return master_df.reset_index().set_index(['Country', 'Date']).astype('float64').replace(0, np.NaN)
 
+def get_panama_data(verbose = False):
+    if verbose: print("Retrieving Panama data")
+    df = pd.read_csv('https://raw.githubusercontent.com/c0t088/DAP-Panama/master/data_covid_pma_dia.csv')
+
+    fields_relevant = {
+        'Fecha': 'Date',
+        'Casos_confirmados': 'Confirmed',
+        'Fallecidos_tot': 'Deaths',
+        'Domicilio': 'Home',
+        'Hosp_sala': 'Hospitalized',
+        'Hosp_uci': 'ICU',
+        'Recuperados': 'Recovered',
+        'Pruebas negativas': 'NegTests',
+        'Pruebas positivas': 'PosTests'
+        }
+
+    total_tests = df[['Fecha', 'Pruebas negativas', 'Pruebas positivas']].set_index('Fecha').cumsum().sum(axis=1).rename('TotalTests')
+
+    df = df[list(fields_relevant.keys())]
+
+    df.columns = [fields_relevant.get(c, c) for c in df.columns]
+    df['Date'] = pd.to_datetime(df['Date'])
+    df = df.set_index('Date')
+
+    df = df.join(total_tests).drop(columns = ['NegTests', 'PosTests'])
+    df['Hospitalized'] = df['Hospitalized'] + df['ICU']
+    df['Country'] = ['Panama'] * len(df.index)
+
+    return df.reset_index().set_index(['Country', 'Date'])
+
 def join_dfs(default, other):
     #For joining dataframes, using one as default and filling in missing data
     overlap = set(default.columns).intersection(set(other.columns))
@@ -244,11 +274,12 @@ def data_clean(out_file, hard_refresh = False, verbose = False):
     dat = dat.stack(level=0)
     dat.index = dat.index.reorder_levels(['Country', 'Date'])
 
-    #Join the dataframes, add US, Italy, Mexico data from source.
+    #Join the dataframes, add US, Italy, Mexico, Chile, Panama data from source.
     dat = join_dfs(dat, get_us_data(verbose = verbose))
     dat = join_dfs(dat, get_italy_data(verbose = verbose))
     dat = join_dfs(dat, get_mexico_data(verbose = verbose))
     dat = join_dfs(dat, get_chile_data(verbose = verbose))
+    dat = join_dfs(dat, get_panama_data(verbose = verbose))
 
     #Get Hopkins data
     jhu_df = get_JHU_data('confirmed', verbose = verbose)
