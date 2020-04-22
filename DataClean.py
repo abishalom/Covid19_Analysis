@@ -137,6 +137,7 @@ def get_mexico_data(verbose = False):
     base_df['Country'] = ['Mexico'] * len(base_df.index)
 
     base_df = base_df.drop(columns = 'Negatives')
+    base_df.index = pd.to_datetime(base_df.index, dayfirst = True)
 
     base_df = base_df.replace(0, np.nan).reset_index().set_index(['Country', 'Date'])
 
@@ -147,11 +148,13 @@ def clean_chile_data(df, df_name):
         rename_map = {
             'Casos totales': 'Confirmed',
             'Casos recuperados': 'Recovered',
-            'Fallecidos': 'Deaths'
+            'Fallecidos': 'Deaths',
         }
         df = df.T
         df.columns = df.iloc[0].str.rstrip()
+        # df.index = pd.to_datetime(df.index)
         df = df[1:].rename(columns = rename_map)[list(rename_map.values())]
+        df.index = pd.to_datetime(df.index)
     elif df_name == 'PCREstablecimiento':
         df = df.query('Examenes == "realizados"').T
         df = df[2:].astype('int64').sum(axis=1).rename('TotalTests').to_frame()
@@ -183,6 +186,7 @@ def get_chile_data(verbose = False):
 
     master_df['Country'] = ['Chile'] * len(master_df.index)
     master_df.index = master_df.index.rename('Date')
+    master_df.index = pd.to_datetime(master_df.index)
 
     return master_df.reset_index().set_index(['Country', 'Date']).astype('float64').replace(0, np.NaN)
 
@@ -209,6 +213,7 @@ def get_panama_data(verbose = False):
     df.columns = [fields_relevant.get(c, c) for c in df.columns]
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.set_index('Date')
+    df.index = pd.to_datetime(df.index)
 
     df = df.join(total_tests).drop(columns = ['NegTests', 'PosTests'])
     df['Hospitalized'] = df['Hospitalized'] + df['ICU']
