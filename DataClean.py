@@ -6,6 +6,7 @@ import datetime
 import zipfile
 import requests
 import io
+import sys
 
 #Helper function
 def get_divide_cols_fn(c1, c2, res):
@@ -203,7 +204,7 @@ def merge_pop(df):
     df = df.merge(pop, how = 'left', left_on = 'Country', right_index = True)
     return df
 
-def data_clean(out_file, hard_refresh = False):
+def data_clean(out_file, hard_refresh = False, verbose = False):
 
     dat = pd.read_csv('data/Covid19_Data.csv', index_col = 0)
     dat.index = pd.to_datetime(dat.index)
@@ -230,13 +231,14 @@ def data_clean(out_file, hard_refresh = False):
     dat = join_dfs(dat, get_italy_data())
     #Mexico part is really slow, probably need to fix at some point. Can adjust to only
     #pull like 2 days by default (instead of a whole week) and hopefully should alleviate.
-    dat = join_dfs(dat, get_mexico_data(verbose = False))
-    dat = join_dfs(dat, get_chile_data(verbose = False))
+    dat = join_dfs(dat, get_mexico_data(verbose = verbose))
+    dat = join_dfs(dat, get_chile_data(verbose = verbose))
     dat = join_dfs(dat, jhu_df)
     jhu_df = None
     dat = merge_pop(dat)
 
     if not hard_refresh:
+        if verbose: print("Joining previously compiled data")
         old = pickle.load(open('data/compiled_data.p', 'rb')).reset_index()
         old.Date = pd.to_datetime(old.Date)
         old = old.set_index(['Country', 'Date'])
@@ -294,4 +296,4 @@ def data_clean(out_file, hard_refresh = False):
 
 if __name__ == "__main__":
     # sched.start()
-    data_clean('data/compiled_data.p')
+    data_clean('data/compiled_data.p', verbose=True)
