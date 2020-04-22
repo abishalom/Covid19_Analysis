@@ -203,8 +203,8 @@ def merge_pop(df):
     df = df.merge(pop, how = 'left', left_on = 'Country', right_index = True)
     return df
 
-def data_clean(out_file):
-    #Load initial Data
+def data_clean(out_file, hard_refresh = False):
+
     dat = pd.read_csv('data/Covid19_Data.csv', index_col = 0)
     dat.index = pd.to_datetime(dat.index)
 
@@ -214,6 +214,7 @@ def data_clean(out_file):
     dat.columns = dat.columns.rename(['Country', 'Col'])
     dat = dat.stack(level=0)
     dat.index = dat.index.reorder_levels(['Country', 'Date'])
+
 
     #Get Hopkins data
     jhu_df = get_JHU_data('confirmed')
@@ -234,6 +235,12 @@ def data_clean(out_file):
     dat = join_dfs(dat, jhu_df)
     jhu_df = None
     dat = merge_pop(dat)
+
+    if not hard_refresh:
+        old = pickle.load(open('data/compiled_data.p', 'rb')).reset_index()
+        old.Date = pd.to_datetime(old.Date)
+        old = old.set_index(['Country', 'Date'])
+        dat = join_dfs(old, dat)
 
     #Tens of thousands of population
     dat['Pop10k'] = dat['Population'] / 10000
