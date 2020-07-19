@@ -156,8 +156,8 @@ def clean_chile_data(df, df_name):
         df = df[1:].rename(columns = rename_map)[list(rename_map.values())]
         df.index = pd.to_datetime(df.index)
     elif df_name == 'PCREstablecimiento':
-        df = df.query('Examenes == "realizados"').T
-        df = df[2:].astype('int64').sum(axis=1).rename('TotalTests').to_frame()
+        df = df.query('Establecimiento == "Total realizados"').T[2:]
+        df.columns = ['TotalTests']
     elif df_name == 'UCI':
         df = df.T.drop(['Region', 'Codigo region', 'Poblacion']).sum(axis=1).rename('ICU').to_frame()
     elif df_name == 'HospitalizadosEtario':
@@ -299,6 +299,8 @@ def data_clean(out_file, hard_refresh = False, verbose = False):
 
     jhu_df = None
     dat = merge_pop(dat, verbose = verbose)
+    if verbose:
+        print("Merged dataframes")
 
     # if not hard_refresh:
     #     if verbose: print("Joining previously compiled data")
