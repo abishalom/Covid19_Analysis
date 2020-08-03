@@ -15,6 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: setup python
+        with: 
+          python-version: '3.8.x'
       - name: updates data files
         run: python DataClean.py
       - name: Commit updates
